@@ -1,4 +1,7 @@
 #include "MyMesh.h"
+#ifdef WIFI_CLI_ENABLED
+  #include "WifiCLI.h"
+#endif
 #include <algorithm>
 
 /* ------------------------------ Config -------------------------------- */
@@ -1281,6 +1284,10 @@ void MyMesh::handleCommand(uint32_t sender_timestamp, char *command, char *reply
       sendNodeDiscoverReq();
       strcpy(reply, "OK - Discover sent");
     }
+#ifdef WIFI_CLI_ENABLED
+  } else if (wifi_cli.handleCommand(command, reply)) {
+    // wifi.* commands (admin only: serial, TCP console, or remote CLI from an admin client)
+#endif
   } else{
     _cli.handleCommand(sender_timestamp, command, reply);  // common CLI commands
   }

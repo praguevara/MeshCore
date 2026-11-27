@@ -13,6 +13,11 @@
   #include <helpers/nrf52/EthernetCLI.h>
 #endif
 
+#ifdef WIFI_CLI_ENABLED
+  #include "WifiCLI.h"
+  static char wifi_command[160];
+#endif
+
 StdRNG fast_rng;
 SimpleMeshTables tables;
 
@@ -114,6 +119,11 @@ void setup() {
   ethernet_start_task();
 #endif
 
+#ifdef WIFI_CLI_ENABLED
+  wifi_command[0] = 0;
+  wifi_cli.begin();   // connects only if WiFi was enabled via 'wifi.on'
+#endif
+
   // send out initial zero hop Advertisement to the mesh
 #if ENABLE_ADVERT_ON_BOOT == 1
   the_mesh.sendSelfAdvertisement(16000, false);
@@ -192,6 +202,17 @@ void loop() {
     }
   } else {
     userBtnDownAt = 0;
+  }
+#endif
+
+#ifdef WIFI_CLI_ENABLED
+  wifi_cli.loop();
+  if (wifi_cli.readLine(wifi_command, sizeof(wifi_command), the_mesh.getNodePrefs()->password)) {
+    char reply[160];
+    reply[0] = 0;
+    the_mesh.handleCommand(0, wifi_command, reply);   // same trust level as the serial console
+    wifi_cli.sendReply(reply);
+    wifi_command[0] = 0;
   }
 #endif
 
